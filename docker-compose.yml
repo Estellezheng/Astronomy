@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  omeka:
+    build: .
+    ports:
+      - "8080:80"
+    volumes:
+      - ./omeka-s/files:/var/www/html/files
+      - ./omeka-s/config:/var/www/html/config
+    environment:
+      - OMEKA_DB_HOST=mysql
+      - OMEKA_DB_USER=omeka
+      - OMEKA_DB_PASSWORD=omeka
+      - OMEKA_DB_NAME=omeka
+    depends_on:
+      - mysql
+
+  mysql:
+    image: mysql:8.0
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=omeka
+      - MYSQL_USER=omeka
+      - MYSQL_PASSWORD=omeka
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+
+volumes:
+  mysql_data:

@@ -1,0 +1,18 @@
+# Omeka S
+/omeka-s/files/
+/omeka-s/config/database.ini
+/omeka-s/logs/
+
+# Docker
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
