@@ -1,7 +1,7 @@
-# Dockerfile para Omeka S
+# Dockerfile for  Omeka S
 FROM php:8.1-apache
 
-# Instalar dependencias del sistema
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     libicu-dev \
     libpng-dev \
@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y \
     unzip \
     && rm -rf /var/lib/apt/lists/*
 
-# Configurar e instalar extensiones PHP
+# Configure and install PHP extensions
 RUN docker-php-ext-configure gd --with-jpeg \
     && docker-php-ext-install -j$(nproc) \
         gd \
@@ -23,40 +23,40 @@ RUN docker-php-ext-configure gd --with-jpeg \
         xml \
         zip
 
-# Habilitar módulos de Apache
+# Enable Apache modules
 RUN a2enmod rewrite headers
 
-# Establecer directorio de trabajo
+# Set working directory
 WORKDIR /var/www/html
 
-# Copiar Omeka S
+# Copy Omeka S
 COPY ./omeka-s /var/www/html/
 
-# Copiar configuración de Apache
+# Copy Apache configuration
 COPY apache-config.conf /etc/apache2/sites-available/000-default.conf
 
-# Crear directorios necesarios si no existen
+# Create necessary directories if they don't exist
 RUN mkdir -p /var/www/html/files \
     && mkdir -p /var/www/html/logs
 
-# Configurar permisos
+# Set permissions
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html/files \
     && chmod -R 755 /var/www/html/logs
 
-# Variables de entorno (Railway las inyectará)
+# Environment variables (Railway will inject them)
 ENV OMEKA_DB_HOST=${MYSQL_HOST:-mysql} \
     OMEKA_DB_PORT=${MYSQL_PORT:-3306} \
     OMEKA_DB_NAME=${MYSQL_DATABASE:-omeka} \
     OMEKA_DB_USER=${MYSQL_USER:-root} \
     OMEKA_DB_PASSWORD=${MYSQL_PASSWORD}
 
-# Exponer puerto
+# Expose port
 EXPOSE 80
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
     CMD curl -f http://localhost/ || exit 1
 
-# Comando de inicio
+# Start command
 CMD ["apache2-foreground"]
