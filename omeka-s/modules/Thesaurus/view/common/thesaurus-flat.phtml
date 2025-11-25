@@ -1,0 +1,54 @@
+<?php
+/**
+ * @var \Laminas\View\Renderer\PhpRenderer $this
+ * @var \Omeka\Api\Representation\SiteRepresentation $site
+ * @var \Omeka\Api\Representation\ItemRepresentation $item
+ * @var array $data
+ * @var string $type
+ * @var array $options
+ */
+
+$plugins = $this->getHelperPluginManager();
+$translate = $this->plugin('translate');
+$escape = $plugins->get('escapeHtml');
+
+$repeat = '- ';
+
+if (empty($data) && !empty($options['hideIfEmpty'])):
+    return;
+endif;
+
+if (isset($options['title'])):
+    $title = $options['title'];
+else:
+    $title = [
+        'flatTree' => 'Tree of concepts', // @translate
+        'flatBranch' => 'Branch of current concept', // @translate
+        'custom' => 'Tree of concepts', // @translate
+    ];
+    $title = isset($title[$type]) ? $translate($title[$type]) : '';
+endif;
+
+$itemId = $item ? $item->id() : null;
+$linkTerm = $this->linkTerm($options);
+?>
+
+<div class="thesaurus thesaurus-flat <?= $options['class'] ?>">
+    <h4><?= $escape($title) ?></h4>
+    <?php if (empty($data)): ?>
+    <p>
+        <?= $translate('No concept.') ?>
+    </p>
+    <?php else: ?>
+    <ul>
+        <?php foreach ($data as $conceptData): ?>
+        <?php $concept = $conceptData['self']; ?>
+        <?php $level = $conceptData['level']; ?>
+        <?php $isCurrent = (is_object($concept) ? $concept->id() : $concept['id']) === $itemId; ?>
+        <li<?php if ($isCurrent) echo ' class="active"'; ?>>
+            <span class="tree-level" data-level="<?= $level ?>"><?= str_repeat($repeat, $level) ?></span> <?= $linkTerm->render($concept) ?>
+        </li>
+        <?php endforeach; ?>
+    </ul>
+    <?php endif; ?>
+</div>

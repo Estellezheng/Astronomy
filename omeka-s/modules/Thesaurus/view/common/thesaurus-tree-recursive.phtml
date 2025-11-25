@@ -1,0 +1,31 @@
+<?php
+/**
+ * @var \Laminas\View\Renderer\PhpRenderer $this
+ * @var array $data
+ * @var array $options
+ * @var \Thesaurus\View\Helper\LinkTerm $linkTerm
+ * @var int $level
+ * @var int $itemId
+ * @var \Laminas\View\Helper\Partial $partial
+ */
+
+?>
+
+<ul>
+    <?php foreach ($data as $current): ?>
+    <?php $isCurrent = (is_object($current['self']) ? $current['self']->id() : $current['self']['id']) === $itemId; ?>
+    <li<?php if ($isCurrent) echo ' class="active"'; ?>>
+        <?= $linkTerm->render($current['self']) ?>
+        <?php if (!empty($current['children'])): ?>
+        <?= $partial('common/thesaurus-tree-recursive', [
+            'itemId' => $itemId,
+            'data' => $current['children'],
+            'options' => $options,
+            'linkTerm' => $linkTerm,
+            'partial' => $partial,
+            'level' => $level + 1,
+        ]) ?>
+        <?php endif; ?>
+   </li>
+   <?php endforeach; ?>
+</ul>

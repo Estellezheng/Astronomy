@@ -1,0 +1,77 @@
+<?php
+/**
+ * @var \Laminas\View\Renderer\PhpRenderer $this
+ * @var \Omeka\Api\Representation\ItemRepresentation $item
+ * @var \Omeka\Api\Representation\ItemRepresentation $resource
+ * @var \Laminas\Form\Form $form
+ */
+
+// The thesaurus is loaded dynamically via js. Else it is possible to use $this->thesaurus($item)->display().
+
+$plugins = $this->getHelperPluginManager();
+$url = $plugins->get('url');
+$assetUrl = $plugins->get('assetUrl');
+$translate = $plugins->get('translate');
+$hyperlink = $plugins->get('hyperlink');
+$escapeAttr = $plugins->get('escapeHtmlAttr');
+
+$form ??= null;
+
+$isAllowed = $item->userIsAllowed('batch-edit');
+if ($isAllowed && $form): $form->prepare(); else: $form = null; endif;
+
+$this->headLink()
+    ->prependStylesheet($assetUrl('css/advanced-search.css', 'Omeka'))
+    ->appendStylesheet($assetUrl('css/jstree.css', 'Omeka'))
+    ->appendStylesheet($assetUrl('css/thesaurus-admin.css', 'Thesaurus'));
+$this->headScript()
+    ->appendFile($assetUrl('vendor/jstree/jstree.min.js', 'Omeka'))
+    ->appendFile($assetUrl('js/jstree-plugins.js', 'Omeka'))
+    ->appendFile($assetUrl('js/query-form.js', 'Omeka'))
+    ->appendFile($assetUrl('js/advanced-search.js', 'Omeka'), 'text/javascript', ['async' => 'async', 'defer' => 'defer'])
+    ->appendFile($assetUrl('js/thesaurus-admin.js', 'Thesaurus'), 'text/javascript', ['async' => 'async', 'defer' => 'defer'])
+;
+$this->htmlElement('body')->appendAttribute('class', 'thesaurus tree ' . ($form ? 'edit' : 'show'));
+?>
+
+<?= $this->pageTitle($item->displayTitle(), 1, $translate('Thesaurus')) ?>
+
+<?php if ($form): ?>
+
+<?= $this->form()->openTag($form) ?>
+<?= $this->formRow($form->get('form_csrf')) ?>
+
+<div id="page-actions">
+    <?= $this->cancelButton() ?>
+    <button type="submit"><?= $translate('Save') ?></button>
+</div>
+
+<?php elseif ($item->userIsAllowed('batch-edit')): // show ?>
+
+<div id="page-actions">
+    <?= $hyperlink($translate('Update and reindex'), $url('admin/thesaurus/id', ['action' => 'update-concepts', 'id' => $item->id()], true), [ 'class' => 'button']) ?>
+    <?= $hyperlink($translate('Edit structure'), $url('admin/thesaurus/id', ['action' => 'structure', 'id' => $item->id()], true), ['class' => 'button']) ?>
+    <?= $hyperlink($translate('Edit item'), $item->adminUrl('edit'), ['class' => 'button']) ?>
+</div>
+
+<?php elseif ($item->userIsAllowed('edit')): // show ?>
+
+<div id="page-actions">
+    <?= $hyperlink($translate('Edit item'), $item->adminUrl('edit'), ['class' => 'button']) ?>
+</div>
+
+<?php endif; ?>
+
+<div class="toolbar-actions">
+    <button id="tree-open-all" type="button" class="button"><?= $translate('Open all') ?></button>
+    <button id="tree-close-all" type="button" class="button"><?= $translate('Close all') ?></button>
+</div>
+
+<div id="jstree"
+    data-link-form-url="<?= $form ? $escapeAttr($url('admin/thesaurus/id', ['action' => 'tree'], true)) : '' ?>"
+    data-jstree-url="<?= $escapeAttr($url('admin/thesaurus/id', ['action' => 'jstree'], true)) ?>">
+</div>
+
+<?php if ($form): ?>
+<?= $this->form()->closeTag() ?>
+<?php endif; ?>
